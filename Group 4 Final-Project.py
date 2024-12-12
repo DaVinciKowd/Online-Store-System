@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-class LinkedListNode:
+class Node:
     def __init__(self, data):
         self.data = data
         self.next = None
@@ -12,7 +12,7 @@ class LinkedList:
         self.size = 0  # Counter to track the number of nodes
 
     def add(self, data):
-        new_node = LinkedListNode(data)
+        new_node = Node(data)
         new_node.next = self.head
         self.head = new_node
         self.size += 1  # Increment size when adding a new node
@@ -46,7 +46,7 @@ class ProductTree:
         return self.products.get(product_id, None)
 
     def search_by_name(self, name):
-        """Search for a product by name (case-sensitive)"""
+        #Search for a product by name
         for product in self.products.values():
             if product.name.lower() == name.lower():
                 return product
@@ -56,17 +56,15 @@ class ProductTree:
         return sorted(self.products.values(), key=lambda x: x.product_id)
 
 class MaxHeap:
-    """Simple Max-Heap implementation"""
     def __init__(self):
         self.heap = []
 
     def push(self, item):
-        """Push item to the heap and maintain the heap property"""
         self.heap.append(item)
         self._heapify_up(len(self.heap) - 1)
 
     def pop(self):
-        """Pop the largest item from the heap"""
+        #Pop the largest item from the heap
         if len(self.heap) == 0:
             return None
         self._swap(0, len(self.heap) - 1)
@@ -75,14 +73,14 @@ class MaxHeap:
         return item
 
     def _heapify_up(self, index):
-        """Move the item at index up to maintain the heap property"""
+        #Move the item at index up to maintain the heap property
         parent = (index - 1) // 2
         if index > 0 and self.heap[parent][0] < self.heap[index][0]:
             self._swap(index, parent)
             self._heapify_up(parent)
 
     def _heapify_down(self, index):
-        """Move the item at index down to maintain the heap property"""
+        #Move the item at index down to maintain the heap property
         left = 2 * index + 1
         right = 2 * index + 2
         largest = index
@@ -96,11 +94,11 @@ class MaxHeap:
             self._heapify_down(largest)
 
     def _swap(self, i, j):
-        """Swap elements at indices i and j"""
+        #Swap elements at indices i and j
         self.heap[i], self.heap[j] = self.heap[j], self.heap[i]
 
     def peek(self):
-        """Return the largest element without removing it"""
+        #Return the largest element without removing it
         if len(self.heap) > 0:
             return self.heap[0]
         return None
@@ -261,25 +259,25 @@ class OnlineStoreUI:
         title_label = tk.Label(self.root, text="Welcome to DAVIRA Store", font=("Helvetica", 16))
         title_label.pack(pady=20)
         
-        self.add_product_button = tk.Button(self.root, text="Add Product", command=self.add_product_ui, width=20)
+        self.add_product_button = tk.Button(self.root, text="Add Product", bg="#1D2951", fg="white", command=self.add_product_ui, width=20)
         self.add_product_button.pack(pady=10)
 
-        self.search_product_button = tk.Button(self.root, text="Search Product", command=self.search_product_ui, width=20)
+        self.search_product_button = tk.Button(self.root, text="Search Product", bg="#1D2951", fg="white", command=self.search_product_ui, width=20)
         self.search_product_button.pack(pady=10)
 
-        self.add_to_cart_button = tk.Button(self.root, text="Add to Cart", command=self.add_to_cart_ui, width=20)
+        self.add_to_cart_button = tk.Button(self.root, text="Add to Cart", bg="#1D2951", fg="white", command=self.add_to_cart_ui, width=20)
         self.add_to_cart_button.pack(pady=10)
 
-        self.view_cart_button = tk.Button(self.root, text="View Cart", command=self.view_cart_ui, width=20)
+        self.view_cart_button = tk.Button(self.root, text="View Cart", bg="#1D2951", fg="white", command=self.view_cart_ui, width=20)
         self.view_cart_button.pack(pady=10)
 
-        self.checkout_button = tk.Button(self.root, text="Checkout", command=self.checkout_ui, width=20)
+        self.checkout_button = tk.Button(self.root, text="Checkout", bg="#1D2951", fg="white", command=self.checkout_ui, width=20)
         self.checkout_button.pack(pady=10)
 
-        self.top_selling_button = tk.Button(self.root, text="Top Selling Products", command=self.view_top_selling_ui, width=20)
+        self.top_selling_button = tk.Button(self.root, text="Top Selling Products", bg="#1D2951", fg="white", command=self.view_top_selling_ui, width=20)
         self.top_selling_button.pack(pady=10)
 
-        self.display_all_button = tk.Button(self.root, text="Display All Products", command=self.display_all_products_ui, width=20)
+        self.display_all_button = tk.Button(self.root, text="Display All Products", bg="#1D2951", fg="white", command=self.display_all_products_ui, width=20)
         self.display_all_button.pack(pady=10)
 
     @consistent_window_size
@@ -368,12 +366,16 @@ class OnlineStoreUI:
         new_win = tk.Toplevel(self.root)
         new_win.title("View Cart")
 
-        message = self.store.cart.view_cart()
-
-        cart_label = tk.Label(new_win, text=message, justify=tk.LEFT)
-        cart_label.pack(pady=10)
+        if not self.store.cart.items:
+            cart_label = tk.Label(new_win, text="No items in the cart.", font=("Helvetica", 12), justify=tk.LEFT, fg="red")
+            cart_label.pack(pady=10)
+        else:
+            message = self.store.cart.view_cart()
+            cart_label = tk.Label(new_win, text=message, font=("Helvetica", 12), justify=tk.LEFT)
+            cart_label.pack(pady=10)
 
         return new_win
+
 
 
     @consistent_window_size
@@ -385,14 +387,21 @@ class OnlineStoreUI:
         )
         
         if confirmation:  # If the user clicked "Yes"
-            self.store.purchase_cart()  # Process the cart purchase
             new_win = tk.Toplevel(self.root)
             new_win.title("Checkout")
+            
+            if not self.store.cart.items:
+                message = "Your cart is empty."
+                checkout_label = tk.Label(new_win, text=message, font=("Helvetica", 14))
+                checkout_label.pack(pady=10)
 
-            # Thank you message after the purchase
-            message = "Thank you for your purchase!"
-            checkout_label = tk.Label(new_win, text=message, font=("Helvetica", 14))
-            checkout_label.pack(pady=10)
+            else:
+                self.store.purchase_cart()  # Process the cart purchase
+
+                # Thank you message after the purchase
+                message = "Thank you for your purchase!"
+                checkout_label = tk.Label(new_win, text=message, font=("Helvetica", 14))
+                checkout_label.pack(pady=10)
 
         else:  # If the user clicked "No"
             messagebox.showinfo("Purchase Canceled", "Your purchase has been canceled.")
