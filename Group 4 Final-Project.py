@@ -1,98 +1,57 @@
-import heapq
-
-class Node:
-    """Node for the linked list (used in purchase history)"""
-    def __init__(self, data):
-        self.data = data
-        self.next = None
-
-class LinkedList:
-    """Linked list to maintain purchase history"""
+class MaxHeap:
+    """Simple Max-Heap implementation"""
     def __init__(self):
-        self.head = None
+        self.heap = []
 
-    def add(self, data):
-        new_node = Node(data)
-        new_node.next = self.head
-        self.head = new_node
+    def push(self, item):
+        """Push item to the heap and maintain the heap property"""
+        self.heap.append(item)
+        self._heapify_up(len(self.heap) - 1)
 
-    def display(self):
-        if not self.head:
-            print("No purchase history.")
-            return
-        current = self.head
-        print("Purchase History:")
-        while current:
-            print(f"{current.data}")
-            current = current.next
-
-class Product:
-    """Class to represent a single product"""
-    def __init__(self, product_id, name, price, stock):
-        self.product_id = product_id
-        self.name = name
-        self.price = price
-        self.stock = stock
-        self.sales = 0
-
-class TreeNode:
-    """Node for the binary search tree"""
-    def __init__(self, product):
-        self.product = product
-        self.left = None
-        self.right = None
-
-class ProductTree:
-    """Binary search tree for managing products"""
-    def __init__(self):
-        self.root = None
-
-    def insert(self, product):
-        if self.root is None:
-            self.root = TreeNode(product)
-        else:
-            self._insert_recursive(self.root, product)
-
-    def _insert_recursive(self, node, product):
-        if product.product_id < node.product.product_id:
-            if node.left is None:
-                node.left = TreeNode(product)
-            else:
-                self._insert_recursive(node.left, product)
-        elif product.product_id > node.product.product_id:
-            if node.right is None:
-                node.right = TreeNode(product)
-            else:
-                self._insert_recursive(node.right, product)
-
-    def search(self, product_id):
-        return self._search_recursive(self.root, product_id)
-
-    def _search_recursive(self, node, product_id):
-        if node is None:
+    def pop(self):
+        """Pop the largest item from the heap"""
+        if len(self.heap) == 0:
             return None
-        if product_id == node.product.product_id:
-            return node.product
-        elif product_id < node.product.product_id:
-            return self._search_recursive(node.left, product_id)
-        else:
-            return self._search_recursive(node.right, product_id)
+        self._swap(0, len(self.heap) - 1)
+        item = self.heap.pop()
+        self._heapify_down(0)
+        return item
 
-    def in_order_traversal(self):
-        products = []
-        self._in_order_recursive(self.root, products)
-        return products
+    def _heapify_up(self, index):
+        """Move the item at index up to maintain the heap property"""
+        parent = (index - 1) // 2
+        if index > 0 and self.heap[parent][0] < self.heap[index][0]:
+            self._swap(index, parent)
+            self._heapify_up(parent)
 
-    def _in_order_recursive(self, node, products):
-        if node is not None:
-            self._in_order_recursive(node.left, products)
-            products.append(node.product)
-            self._in_order_recursive(node.right, products)
+    def _heapify_down(self, index):
+        """Move the item at index down to maintain the heap property"""
+        left = 2 * index + 1
+        right = 2 * index + 2
+        largest = index
+
+        if left < len(self.heap) and self.heap[left][0] > self.heap[largest][0]:
+            largest = left
+        if right < len(self.heap) and self.heap[right][0] > self.heap[largest][0]:
+            largest = right
+        if largest != index:
+            self._swap(index, largest)
+            self._heapify_down(largest)
+
+    def _swap(self, i, j):
+        """Swap elements at indices i and j"""
+        self.heap[i], self.heap[j] = self.heap[j], self.heap[i]
+
+    def peek(self):
+        """Return the largest element without removing it"""
+        if len(self.heap) > 0:
+            return self.heap[0]
+        return None
 
 class OnlineStore:
     def __init__(self):
         self.product_tree = ProductTree()  # Tree to store products
-        self.top_selling = []  # Min-heap to track top-selling products (-sales used for max-heap behavior)
+        self.top_selling = MaxHeap()  # Max-heap to track top-selling products
         self.purchase_history = LinkedList()  # Linked list to store purchase history
 
     # Add a new product
@@ -121,7 +80,7 @@ class OnlineStore:
                 product.stock -= quantity
                 product.sales += quantity
                 total_cost = product.price * quantity
-                heapq.heappush(self.top_selling, (-product.sales, product))
+                self.top_selling.push((product.sales, product))
                 self.purchase_history.add(f"Purchased {quantity} x {product.name} for ${total_cost:.2f}")
                 print(f"Purchased {quantity} x {product.name}. Total: ${total_cost:.2f}")
             else:
@@ -132,9 +91,19 @@ class OnlineStore:
     # Display top-selling products
     def display_top_selling(self, top_n=3):
         print(f"Top {top_n} best-selling products:")
-        top_products = heapq.nsmallest(top_n, self.top_selling)
-        for sales, product in top_products:
-            print(f"{product.name} - Sold: {-sales}")
+        top_products = []
+        for _ in range(top_n):
+            top_product = self.top_selling.pop()
+            if top_product:
+                sales, product = top_product
+                top_products.append(f"{product.name} - Sold: {sales}")
+        
+        # Re-insert the products back into the heap if needed
+        for product in top_products:
+            self.top_selling.push(product)
+        
+        for product in top_products:
+            print(product)
 
     # Display purchase history
     def display_purchase_history(self):
